@@ -60,10 +60,6 @@ class Controller_Sesame extends \Controller_Template
 			}
 		}
 
-		if (! $this->template) {
-			var_dump($this); die;
-		}
-
 		$this->template->content = \View::forge('login', [
 			'fieldset' => $fieldset,
 			'errors' => $errors,
