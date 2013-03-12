@@ -22,7 +22,7 @@ class Sesame
 			$driver = $class_or_config;
 		}
 
-		if (! \Autoloader::load($driver))
+		if (! class_exists($driver) && ! \Autoloader::load($driver))
 		{
 			throw new \ConfigException('Tried to load login driver ' . $driver . ' but it was not found');
 		}
