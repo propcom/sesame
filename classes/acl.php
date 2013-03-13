@@ -14,6 +14,17 @@ class ACL
 	protected static $_rules;
 
 	/**
+	 * Check the currently logged-in user's access, using the default driver to find the user.
+	 *
+	 * @param	string	$url	Path to test
+	 * @return	boolean	True if user has access
+	 */
+	public static function check_access($url)
+	{
+		return static::check_user_access(\Sesame::instance()->user(), $url);
+	}
+
+	/**
 	 * Check the user's access to $url based on the current set of rules.
 	 *
 	 * @param	$user	Object	Any object with a has_permission method (if you want to use that behaviour).
