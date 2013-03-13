@@ -27,8 +27,8 @@ class ACL
 	/**
 	 * Check the user's access to $url based on the current set of rules.
 	 *
-	 * @param	$user	Object	Any object with a has_permission method (if you want to use that behaviour).
-	 * @param	$url	string	Path to test.
+	 * @param	Object	$user	Any object with a has_permission method (if you want to use that behaviour).
+	 * @param	string	$url	Path to test.
 	 * @return	boolean	True if user has access.
 	 */
 	public static function check_user_access($user, $url)
@@ -42,7 +42,7 @@ class ACL
 		$rules = [ '/' => static::$_rules['__rules__'] ];
 		$cur_rule = static::$_rules;
 
-		foreach ($uri->segments() as $segment)
+		foreach ($uri->segments() ?: [] as $segment)
 		{
 			if (! isset($cur_rule[$segment]))
 			{
@@ -154,8 +154,8 @@ class ACL
 	/**
 	 * Allow access to $url if any of $rules is true
 	 *
-	 * @param	$url	string	Absolute path to control
-	 * @param	$rules	array	Array of rules to test.
+	 * @param	string	$url	Absolute path to control
+	 * @param	array	$rules	Array of rules to test.
 	 */
 	public static function allow_if($url, $rules)
 	{
@@ -165,8 +165,8 @@ class ACL
 	/**
 	 * Deny access to $url if any of $rules is true
 	 *
-	 * @param	$url	string	Absolute path to control
-	 * @param	$rules	array	Array of rules to test.
+	 * @param	string	$url	Absolute path to control
+	 * @param	array	$rules	Array of rules to test.
 	 */
 	public static function deny_if($url, $rules)
 	{
@@ -176,8 +176,8 @@ class ACL
 	/**
 	 * Allow access to $url iff all of $rules are true
 	 *
-	 * @param	$url	string	Absolute path to control
-	 * @param	$rules	array	Array of rules to test.
+	 * @param	string	$url	Absolute path to control
+	 * @param	array	$rules	Array of rules to test.
 	 */
 	public static function allow_unless($url, $rules)
 	{
@@ -187,8 +187,8 @@ class ACL
 	/**
 	 * Deny access to $url iff all of $rules are true
 	 *
-	 * @param	$url	string	Absolute path to control
-	 * @param	$rules	array	Array of rules to test.
+	 * @param	string	$url	Absolute path to control
+	 * @param	array	$rules	Array of rules to test.
 	 */
 	public static function deny_unless($url, $rules)
 	{
