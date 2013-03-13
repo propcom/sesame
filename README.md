@@ -11,7 +11,8 @@ Sesame aliases the class `\Sesame\Sesame` into the root namespace.
 
 Using Sesame is simple because the concept of auth is considered to have only two functions:
 
-* Authenticating a user Authorising a user
+* Authenticating a user 
+* Authorising a user
 
 To get the most basic functionality you can simply:
 
