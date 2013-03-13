@@ -137,17 +137,94 @@ which driver it goes to by getting Sesame to do it.
 The Sesame class uses `static::` and `$this->` in all situations, meaning it can be extended and overridden without
 concern.
 
-## Authorisation
+## ACL
 
-Authorisation is the association of users with permissions, and as such defines the concept of a user role and a user
-permission. Authorisation is performed with the ACL class.
+ACL is a helper class in Sesame that associates user permissions with URIs. User permissions are expected to be
+associated with users in the driver's own namespace; this is enforced by presuming the User class you use has a
+`has_permission` method on it. This method takes solely the string name of the permission to test for and returns a
+boolean value as appropriate.
 
-Authorisation is how you determine that a user can perform an action. To use the authorisation part of Sesame your user
-model has to have a method to return the set of permissions available to that user and a method to return the user roles
-the user is a member of.
+The flexibility of this system is that you define what a permission is, what the string name means, and how to determine
+whether it is associated with a given user. The ACL's job is only to associate these strings with URI paths, then
+interrogate the user object later to determine access.
 
-Implementations are free to group permissions and roles however they like; so long as the User model can return its
-roles and permissions, since this is all the ACL cares about.
+Each URI can only be associated with one rule type, which can be an array of any number of actual rules. You can call
+the same method with the same URI any number of times and the list of rules will be extended. Trying to add another rule
+set to a URI already registered will result in an exception being thrown.
 
-Since it is a common case, the ACL also understands the idea of URL access. This part of ACL is configured in
-bootstraps, by telling the ACL what permissions and roles can access what URLs.
+You can define ACL rules from anywhere; but you will probably do it in your app bootstrap. Modules can add paths to your
+app but do not have the bootstrap concept; and packages have bootstraps but don't define paths. Further, a module won't
+know what permissions you have set up - and can't even assume that you are using permissions in the first place - so it
+is best left to the app to define access rules.
+
+Code example!
+
+	\Sesame\ACL::allow_if('/restricted-path', [ 'admin' ]);
+	\Sesame\ACL::deny_if('/', [ 'banhammer' ]);
+
+	// ... later ...
+	if (\Sesame\ACL::check_user_access($user, $url)) 
+	{
+		// as you were
+	}
+
+The action you apply to the root path (probably something you'll do in your app bootstrap) determines the default action
+to take when no rules match, since this is the least specific rule and will always match. In the above example,
+`deny_if` implies the default action is _allow_; denial is only the case _iff_ one of the rules matches. However, if the
+path is `/restricted-path`, denial is the default action because we have set up an `allow_if` rule on it, which will
+allow access _iff_ one of the rules passes.
+
+### Access rules
+
+#### Types
+
+There are four available access rule types:
+
+* `allow_if`
+* `deny_if`
+* `allow_unless`
+* `deny_unless`
+
+These differ in subtle ways:
+
+* `_if` rules require _any_ rule to pass; 
+* `_unless` requires _all_ rules to pass;
+* `_if` rules imply the `allow` or `deny` is the exception - the _opposite_ is the default;
+* `_unless` rules imply the `allow` or `deny` is the _default_ - the opposite only happens when _all_ rules are met.
+
+Explicitly:
+
+* `allow_if` denies by default, and allows if _any_ rule is met;
+* `deny_if` allows by default, and denies if _any_ rule is met;
+* `allow_unless` allows by default, and denies if _all_ rules are met;
+* `deny_unless` denies by default, and allows if _all_ rules are met.
+
+#### Rules
+
+Rules are defined in one of two ways:
+
+* Strings are treated as permission names and are passed to `has_permission` on the user object being interrogated
+* Functions are run with the user object
+
+ACL does _not_ use `is_callable` because it is a travesty. Functions _must_ be instances of `Closure` to be run.
+
+To be treated as a permission, the string is passed to the User object's `has_permission` method. If the User class
+you're using has no such function you will receive a runtime error because you're doing it wrong.
+
+#### Paths
+
+Paths are divided into segments and each segment can have zero or more rules of the same type associated with it. It
+cannot have two types associated with it.
+
+The URL to check is matched against the defined segments, and the most specific segment that has rules is used.
+
+If no subset of the path matches, the root path is - obviously - tested. If you don't define a root rule, default
+behaviour is to deny access.
+
+#### `can_access`
+
+There is a trait `\Sesame\ACL_User` containing a single method that you can install into your user class, allowing
+
+	$user->can_access($url)
+
+from anywhere in your code.
