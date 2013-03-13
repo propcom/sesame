@@ -59,7 +59,7 @@ log a user in.
 
 This puts a lot more onus on you to write a sensible User model.
 
-Sesame doesn't make any assumptions about your user model ecause it doesn't know what model you are using. Instead, you
+Sesame doesn't make any assumptions about your user model because it doesn't know what model you are using. Instead, you
 configure a login driver, and it is the login driver (and any module- or app-specific controllers) that interface with
 the user model directly.
 
