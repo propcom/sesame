@@ -13,6 +13,8 @@ class ACL
 {
 	protected static $_rules;
 
+	protected static $_fallthrough = false;
+
 	/**
 	 * Check the currently logged-in user's access, using the default driver to find the user.
 	 *
@@ -187,9 +189,9 @@ class ACL
 	 * @param	string	$url	Absolute path to control
 	 * @param	array	$rules	Array of rules to test.
 	 */
-	public static function allow_if($url, $rules)
+	public static function allow_if($url, $rules, $fallthrough=null)
 	{
-		static::_set($url, $rules, 'allow_if');
+		static::_set($url, $rules, 'allow_if', $fallthrough);
 	}
 
 	/**
@@ -198,9 +200,9 @@ class ACL
 	 * @param	string	$url	Absolute path to control
 	 * @param	array	$rules	Array of rules to test.
 	 */
-	public static function deny_if($url, $rules)
+	public static function deny_if($url, $rules, $fallthrough=null)
 	{
-		static::_set($url, $rules, 'deny_if');
+		static::_set($url, $rules, 'deny_if', $fallthrough);
 	}
 
 	/**
@@ -209,9 +211,9 @@ class ACL
 	 * @param	string	$url	Absolute path to control
 	 * @param	array	$rules	Array of rules to test.
 	 */
-	public static function allow_unless($url, $rules)
+	public static function allow_unless($url, $rules, $fallthrough=null)
 	{
-		static::_set($url, $rules, 'allow_unless');
+		static::_set($url, $rules, 'allow_unless', $fallthrough);
 	}
 
 	/**
@@ -220,15 +222,44 @@ class ACL
 	 * @param	string	$url	Absolute path to control
 	 * @param	array	$rules	Array of rules to test.
 	 */
-	public static function deny_unless($url, $rules)
+	public static function deny_unless($url, $rules, $fallthrough=null)
 	{
-		static::_set($url, $rules, 'deny_unless');
+		static::_set($url, $rules, 'deny_unless', $fallthrough);
 	}
 
-	protected static function _set($url, $rules, $rule)
+	/**
+	 * Fallthrough defaults to false; change it here.
+	 *
+	 * @param	bool	$fallthrough	Fallthrough yay or fallthrough nay
+	 */
+	protected static function fallthrough($fallthrough)
 	{
+		static::$_fallthrough = (bool) $fallthrough;
+	}
+
+	protected static function _set($url, $rules, $rule, $fallthrough=null)
+	{
+		$url[0] == '/' or $url = "/$url";
 		$uri = new \Uri($url);
 		$segments = $uri->get_segments() ?: [];
+
+		// Check this before defaulting fallthrough - shouldn't punish them for not specifying
+		if (! $segments && $fallthrough)
+		{
+			throw new ACLRuleException("Fallthrough on root path doesn't make sense")
+		}
+
+		is_null($fallthrough) and $fallthrough = static::$_fallthrough;
+
+		if ($fallthrough && $segments)
+		{
+			$parent = $segments;
+			array_pop($parent);
+			$parent_path = implode('/', $parent);
+			array_push($rules, function($user) use ($parent_path) {
+				return \ACL::check_user_access($user, $parent_path);
+			});
+		}
 
 		static::$_rules = static::$_rules ?: [];
 
