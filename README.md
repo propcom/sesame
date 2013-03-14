@@ -1,9 +1,7 @@
 # Sesame
 
-Sesame is an Authentication package for FuelPHP. It does not conform to Fuel's own Auth package because I, personally,
-prefer it when thought goes into things before people actually make them.
-
-Sheepy said to call it Sentry but didn't tell me that was taken so now it's called Sesame.
+Sesame is an Authentication package for FuelPHP. It was created because I didn't understand Fuel's own Auth package, and
+an alternative to Auth is requested frequently enough to matter.
 
 ## Usage
 
