@@ -268,3 +268,5 @@ class ACL
 		}
 	}
 }
+
+class ACLRuleException extends \Exception {}
