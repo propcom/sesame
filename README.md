@@ -47,37 +47,41 @@ it will first try to find config by the string name, and then try a class by the
 
 ### Users
 
-The common part is "a user". Sesame doesn't care what you mean by "a user", except to state that it must have a way of
-identifying it singly. That is to say, your model must have at least one unique key. Sesame doesn't even care that the
-user has a password; all _you_ do is tell it how to find a user later.
+The central concept in Sesame is "a user". Sesame doesn't care what you mean by "a user", except to state that it must
+have a way of identifying it singly. That is to say, your model must have at least one unique key. Sesame doesn't even
+care whether the user has or does not have a password; all _you_ do is tell it how to find a user later.
 
-The most obvious example is password authentication: a user is identified by their username and proven by their
-password. Sesame makes no assumptions about how you prove that a user is who they say they are; you could redirect the
-user to OpenID for all Sesame cares. All you have to do is respond accurately when Sesame asks your Login driver to
-log a user in.
-
-This puts a lot more onus on you to write a sensible User model.
+Usually a user will pass at least two pieces of information; at least one identifier and at least one credential. The
+most obvious example is password authentication: a user is identified by their username and proven by their password.
+Sesame makes no assumptions about how you prove that a user is who they say they are; you could redirect the user to
+OpenID for all Sesame cares. All you have to do is respond accurately when Sesame asks your Login driver to log a user
+in.
 
 Sesame doesn't make any assumptions about your user model because it doesn't know what model you are using. Instead, you
 configure a login driver, and it is the login driver (and any module- or app-specific controllers) that interface with
 the user model directly.
+
+This puts a lot more onus on you to write a sensible driver.
 
 ### Login
 
 In order to avoid crappy configuration stuff all the time, Sesame uses a driver system that interjects itself between
 Auth and the User model. You can configure that, or you can specify which driver you want to use explicitly at runtime.
 
-The driver has three required static methods. 
+#### Login Driver
 
-The first is `login`. It takes no parameters. Sesame will call this method on your login driver when it discovers no
-user is currently logged in. Because the driver is so thin, it is encouraged to write app-specific drivers.
+Because the driver is so thin, it is encouraged to write app-specific drivers. The driver has three required static
+methods. 
 
-The second is `retrieve_user`. This takes one parameter, which is whatever you gave to Sesame. Sesame uses this to
-retrieve the user from the session. Since you can identify users in any way you like, when you have authenticated a user
-you should provide Sesame with the information you accept in `retrieve_user`.
+1. `login`. It takes no parameters. Sesame will call this method on your login driver when it discovers no user is
+currently logged in. 
 
-The third is `make_user`. This is sent user data. You will have collected this data so Sesame just passes it on. It
-should return the created user on success, or any false value on failure.
+2. `retrieve_user`. This takes one parameter, which is whatever you give to Sesame. Sesame uses this to retrieve the
+user from the session. Since you can identify users in any way you like, when you have authenticated a user you should
+provide Sesame with the information you accept in `retrieve_user`. See "Logging in" below
+
+3. `make_user`. This is sent user data. You will have collected this data somehow or other so Sesame just passes it on.
+It should return the created user on success, or any false value on failure.
 
 A simple driver implementation follows:
 
@@ -107,26 +111,32 @@ A simple driver implementation follows:
     }
 
 `login` is an obvious place to redirect users to an external service, or basically to do whatever. The builtin login
-driver (`Login_Default`) does this, but also stashes the originally-requested URI in the session for later use.
+driver (`Sesame\Driver_Default`) does this, but also stashes the originally-requested URI in the session for later use.
 
-Since this represents a break in processing - the request ends! - Sesame requires you to tell it when login has
-succeeded. This can be done in one of two ways:
+#### Logging in
 
-* If the request has to end, call `Sesame::instance()->user_ok` with the data that `retrieve_user` expects.  
-* If the user can be authorised within the same request, simply return that data from the `login` method.
+Sesame requires you to tell it when login has succeeded. To do this, you pass Sesame enough information to identify the
+user. In the background Sesame will add this information to the session, and use it in future requests to grab the user
+again.
+
+This data can be given to Sesame in one of two ways:
+
+* If the request has to end, call `Sesame::instance()->user_ok` with the data once you have authorised the user.
+* If the user can be authorised within the same request, simply return the data from the `login` method.
 
 Remember, that data will be stored in the session and used each request to retrieve the user, so make sure that you
-provide Sesame with enough information to retrieve your user.
+provide Sesame with enough information to retrieve your user. Sesame will pass the exact same data back to
+`retrieve_user` on your driver, so it's on you to pass data you want to see.
 
 The default controller, driver, and user model in the Sesame module should be well-commented enough to explain the
 procedure and get you running to write your own drivers.
 
-### Logout
+#### Logging out
 
 Simply call `Sesame::instance()->logout()`. This will clear the session and unset the user. You probably will want to
 force a redirect immediately afterward.
 
-### Signup
+#### Signing up
 
 The Sesame instance provides a `signup()` method, to which you can pass any user data required to create a user. This
 will be directly passed to the `make_user` method of your driver, so really this is just a convenient way of deciding
@@ -146,35 +156,28 @@ boolean value as appropriate.
 
 The flexibility of this system is that you define what a permission is, what the string name means, and how to determine
 whether it is associated with a given user. The ACL's job is only to associate these strings with URI paths, then
-interrogate the user object later to determine access.
+interrogate the user object later to determine access. You can even forgo the whole idea if you make sure never to pass
+string values to the ACL.
 
-Each URI can only be associated with one rule type, which can be an array of any number of actual rules. You can call
-the same method with the same URI any number of times and the list of rules will be extended. Trying to add another rule
-set to a URI already registered will result in an exception being thrown.
-
-You can define ACL rules from anywhere; but you will probably do it in your app bootstrap. Modules can add paths to your
-app but do not have the bootstrap concept; and packages have bootstraps but don't define paths. Further, a module won't
-know what permissions you have set up - and can't even assume that you are using permissions in the first place - so it
-is best left to the app to define access rules.
-
-Code example!
-
-	\Sesame\ACL::allow_if('/restricted-path', [ 'admin' ]);
-	\Sesame\ACL::deny_if('/', [ 'banhammer' ]);
-
-	// ... later ...
-	if (\Sesame\ACL::check_user_access($user, $url)) 
-	{
-		// as you were
-	}
-
-The action you apply to the root path (probably something you'll do in your app bootstrap) determines the default action
-to take when no rules match, since this is the least specific rule and will always match. In the above example,
-`deny_if` implies the default action is _allow_; denial is only the case _iff_ one of the rules matches. However, if the
-path is `/restricted-path`, denial is the default action because we have set up an `allow_if` rule on it, which will
-allow access _iff_ one of the rules passes.
+The ACL class is also aliased into the root namespace.
 
 ### Access rules
+
+#### URIs
+
+The URIs you give to ACL are the root-based path part of the URI within your site. As such they always should start with
+`/`; but if they don't, one will be added, so relative paths are assumed to be relative to root and, hence, absolute.
+
+Paths are divided into segments and each segment can have zero or more rules of the same type associated with it. It
+cannot have two types associated with it.
+
+To test a path, call either `check_access` or `check_user_access` statically on the ACL object. The former takes the
+path as a parameter, and the latter takes the user and then the path. The former simply gets the current user out of the
+default Sesame driver and calls the other.
+
+The provided path is then matched against the ones with rules. A match is taken by specificity, i.e. the longest defined
+path that matches at the start of the provided one. This means you can set up a rule for an entire section of the site,
+e.g. `/user`, as requiring a permission, and then an individual path like `/user/login` to override that.
 
 #### Types
 
@@ -199,6 +202,37 @@ Explicitly:
 * `allow_unless` allows by default, and denies if _all_ rules are met;
 * `deny_unless` denies by default, and allows if _all_ rules are met.
 
+*Important:* Realise that if you add `_unless` rules to an existing set, it still has to match all of them; the original
+set is extended, so even if you pass all of the original set you still have to pass the extras.
+
+Code example!
+
+	\ACL::allow_if('/restricted-path', [ 'admin' ]);
+	\ACL::deny_if('/', [ 'banhammer' ]);
+
+	// ... later ...
+	if (\ACL::check_user_access($user, $url)) 
+	{
+		// as you were
+	}
+
+Each URI can only be associated with one rule type, which can contain an array of any number of actual rules. You can call
+the same method with the same URI any number of times and the list of rules will be extended, but it is an exception to
+try to later set a rule of a different type on a URI already registered.
+
+You can define ACL rules from anywhere; but you will probably do it in your app bootstrap. Modules can add paths to your
+app but do not have the bootstrap concept; and packages have bootstraps but don't define paths. Further, a module won't
+know what permissions you have set up - and can't even assume that you are using permissions in the first place - so it
+is best left to the app to define access rules.
+
+The action you apply to the root path (probably something you'll do in your app bootstrap) determines the default action
+to take when no rules match, since this is the least specific rule and will always match. In the above example,
+`deny_if` implies the default action is _allow_; denial is only the case _iff_ one of the rules matches. However, if the
+path is `/restricted-path`, denial is the default action because we have set up an `allow_if` rule on it, which will
+allow access _iff_ one of the rules passes.
+
+If you don't set up a root rule and no rule matches, the default behaviour is to deny.
+
 #### Rules
 
 Rules are defined in one of three ways:
@@ -214,16 +248,6 @@ avoids problems where a permission is happenstantially named the same as a funct
 
 To be treated as a permission, the string is passed to the User object's `has_permission` method. If the User class
 you're using has no such function you will receive a runtime error because you're doing it wrong.
-
-#### Paths
-
-Paths are divided into segments and each segment can have zero or more rules of the same type associated with it. It
-cannot have two types associated with it.
-
-The URL to check is matched against the defined segments, and the most specific segment that has rules is used.
-
-If no subset of the path matches, the root path is - obviously - tested. If you don't define a root rule, default
-behaviour is to deny access.
 
 #### `can_access`
 
