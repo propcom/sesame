@@ -18,7 +18,6 @@ To get the most basic functionality you can simply:
 
 * Load the Sesame package 
 * Load the Sesame module 
-* Configure `sesame.login_driver` to be `Sesame\Login_Default`
 * Add the `/login` route to go to `/sesame/login/login`
 
 Since this does not capture every request and check for logged-in-ness you should also create a `before()` method on
