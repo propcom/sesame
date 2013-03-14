@@ -249,6 +249,52 @@ avoids problems where a permission is happenstantially named the same as a funct
 To be treated as a permission, the string is passed to the User object's `has_permission` method. If the User class
 you're using has no such function you will receive a runtime error because you're doing it wrong.
 
+#### Fallthrough
+
+By default rules do not fall through; that means that if a specific match is made, parent paths will not be tested. In
+any rule creation you can request fallthrough by adding an extra boolean parameter to the method call. When true, a
+function will be created that returns the result of checking access on the parent path.
+
+This function still follows the `_if`/`_unless` conditions; so if you request fallthrough on an `_unless` rule, the user
+has to both be allowed by the specified rules _and_ by the parent rules; whereas if you request fallthrough on an `_if`
+rule, you are allowed in if these rules _or_ the parent rules say so.
+
+Here's an example.
+
+    // Allow access if the user is in the user group.
+    \ACL::allow_if('/user', ['user']);
+
+    // Allow access if the user is in the admin group _or_ in any rules set on /user
+    \ACL::allow_if('/user/edit', ['admin'], true);
+
+    // Allow access only if the user is in the internal _and_ marketing groups
+    \ACL::deny_unless('/marketing', ['internal', 'marketing']);
+
+    // Allow access only if the user is in the email group _and_ is allowed to access /marketing
+    \ACL::deny_unless('/marketing/email', ['email'], true);
+
+By doing this you can easily create:
+
+* Areas of the site that require a specific credential, and then subsections thereof that can also be accessed by
+people with a different credential
+* Areas of the site denied to people with a specific credential, and subsections that are only denied if they have
+another one as well
+* Areas of the site that require a specific credential, with subsections that require even more credentials
+* Areas of the site denied to people with a specific credential, but subsections that can be accessed if you have a
+different (overriding) one
+
+I only exemplified two of these here; those seem the most useful. Experiment with the combinations of `_if` and
+`_unless` when fallthrough is on.
+
+It is an exception to require fallthrough on the root path.
+
+##### Default fallthrough
+
+Fallthrough is off by default, but you can call `\ACL::fallthrough(true)` to turn it on. In this case, you can pass
+`false` to your rules to explicitly turn it off for those.
+
+If you turn fallthrough on by default you won't be penalised for not passing `false` for the root one.
+
 #### `can_access`
 
 There is a trait `\Sesame\ACL_User` containing a single method that you can install into your user class, allowing
