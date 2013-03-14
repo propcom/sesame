@@ -260,11 +260,11 @@ class ACL
 	{
 		if ($permission[0] == '~')
 		{
-			return ! $user->has_permission(substr($permission,1)))
+			return ! $user->has_permission(substr($permission,1));
 		}
 		else
 		{
-			return $user->has_permission($permission))
+			return $user->has_permission($permission);
 		}
 	}
 }
