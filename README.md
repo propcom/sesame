@@ -202,12 +202,15 @@ Explicitly:
 
 #### Rules
 
-Rules are defined in one of two ways:
+Rules are defined in one of three ways:
 
 * Strings are treated as permission names and are passed to `has_permission` on the user object being interrogated
 * Functions are run with the user object
+* The exact values `true` and `false` can be used instead of writing a function that always returns true or false. This
+can be useful to make the root path a deny path, and to allow access to certain more specific paths like login.
 
-ACL does _not_ use `is_callable` because it is a travesty. Functions _must_ be instances of `Closure` to be run.
+ACL does _not_ use `is_callable` because it is a travesty. Functions _must_ be instances of `Closure` to be run. This
+avoids problems where a permission is happenstantially named the same as a function, and thus looks callable.
 
 To be treated as a permission, the string is passed to the User object's `has_permission` method. If the User class
 you're using has no such function you will receive a runtime error because you're doing it wrong.

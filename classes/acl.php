@@ -66,6 +66,16 @@ class ACL
 				// Allow if any
 				foreach ($rules['allow_if'] as $rule)
 				{
+					if ($rule === true)
+					{
+						return true;
+					}
+
+					if ($rule === false)
+					{
+						return false;
+					}
+
 					if ($rule instanceof \Closure and $rule($user))
 					{
 						return true;
@@ -86,6 +96,14 @@ class ACL
 
 				foreach ($rules['deny_unless'] as $rule)
 				{
+					if ($rule === true)
+					{ /* no op but there's an if later. */ }
+
+					if ($rule === false)
+					{
+						return false;
+					}
+
 					if ($rule instanceof \Closure)
 					{
 						$ok = $ok && $rule($user);
@@ -110,6 +128,14 @@ class ACL
 				$deny = true;
 				foreach ($rules['allow_unless'] as $rule)
 				{
+					if ($rule === true)
+					{ /* no op but there's an if later. */ }
+
+					if ($rule === false)
+					{
+						// Allow unless all of these are true -> allow on exactly false
+						return true;
+					}
 					if ($rule instanceof \Closure)
 					{
 						$deny = $deny && $rule($user);
@@ -132,6 +158,16 @@ class ACL
 				// Deny if any
 				foreach ($rules['deny_if'] as $rule)
 				{
+					if ($rule === true)
+					{
+						return false;
+					}
+
+					if ($rule === false)
+					{
+						return true;
+					}
+
 					if ($rule instanceof \Closure and $rule($user))
 					{
 						return false;
