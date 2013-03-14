@@ -21,7 +21,9 @@ To get the most basic functionality you can simply:
 * Add the `/login` route to go to `/sesame/login/login`
 
 Since this does not capture every request and check for logged-in-ness you should also create a `before()` method on
-some base controller that uses `\Sesame::instance->user()` and `\Sesame::instance()->login()`.
+some base controller that uses `\Sesame::instance->user()` and `\Sesame::instance()->login()`:
+
+    \Sesame::instance()->user() or \Sesame::instance()->login();
 
 ### Configurable things
 
