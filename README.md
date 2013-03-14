@@ -205,6 +205,7 @@ Explicitly:
 Rules are defined in one of three ways:
 
 * Strings are treated as permission names and are passed to `has_permission` on the user object being interrogated
+  * Strings starting with `~` mean "not this permission" - this is useful for creating e.g. a 'banned' permission
 * Functions are run with the user object
 * The exact values `true` and `false` can be used instead of writing a function that always returns true or false. This
 can be useful to make the root path a deny path, and to allow access to certain more specific paths like login.

@@ -81,10 +81,7 @@ class ACL
 						return true;
 					}
 
-					if ($user->has_permission($rule))
-					{
-						return true;
-					}
+					return static::_check_user_permission($user, $rule);
 				}
 
 				return false;
@@ -110,7 +107,7 @@ class ACL
 					}
 					else
 					{
-						$ok = $ok && $user->has_permission($rule);
+						$ok = $ok && static::_check_user_permission($user, $rule);
 					}
 					if (! $ok)
 					{
@@ -142,7 +139,7 @@ class ACL
 					}
 					else
 					{
-						$deny = $deny && $user->has_permission($rule);
+						$deny = $deny && static::_check_user_permission($user, $rule);
 					}
 
 					if (! $deny)
@@ -173,10 +170,7 @@ class ACL
 						return false;
 					}
 
-					if ($user->has_permission($rule))
-					{
-						return false;
-					}
+					return static::_check_user_permission($user, $rule);
 				}
 
 				return true;
@@ -260,5 +254,17 @@ class ACL
 		}
 
 		\Arr::set(static::$_rules, $key, $existing);
+	}
+
+	protected static function _check_user_permission($user, $permission)
+	{
+		if ($permission[0] == '~')
+		{
+			return ! $user->has_permission(substr($permission,1)))
+		}
+		else
+		{
+			return $user->has_permission($permission))
+		}
 	}
 }
