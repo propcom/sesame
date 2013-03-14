@@ -228,7 +228,7 @@ class ACL
 	protected static function _set($url, $rules, $rule)
 	{
 		$uri = new \Uri($url);
-		$segments = $uri->segments() ?: [];
+		$segments = $uri->get_segments() ?: [];
 
 		static::$_rules = static::$_rules ?: [];
 
