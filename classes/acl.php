@@ -232,7 +232,7 @@ class ACL
 	 *
 	 * @param	bool	$fallthrough	Fallthrough yay or fallthrough nay
 	 */
-	protected static function fallthrough($fallthrough)
+	public static function fallthrough($fallthrough)
 	{
 		static::$_fallthrough = (bool) $fallthrough;
 	}
