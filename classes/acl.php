@@ -246,7 +246,7 @@ class ACL
 		// Check this before defaulting fallthrough - shouldn't punish them for not specifying
 		if (! $segments && $fallthrough)
 		{
-			throw new ACLRuleException("Fallthrough on root path doesn't make sense")
+			throw new ACLRuleException("Fallthrough on root path doesn't make sense");
 		}
 
 		is_null($fallthrough) and $fallthrough = static::$_fallthrough;
