@@ -70,6 +70,11 @@ class Sesame
 		$driver = $this->_driver;
 		$user = $driver::retrieve_user($user_data);
 
+		if (method_exists($user, 'set_last_login'))
+		{
+			$user->set_last_login(time());
+		}
+
 		$this->_user = $user;
 		return $user;
 	}
