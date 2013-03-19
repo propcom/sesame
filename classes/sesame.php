@@ -65,15 +65,22 @@ class Sesame
 
 	public function user_ok($user_data)
 	{
-		\Session::set($this->_session_key(), $user_data);
-
-		$driver = $this->_driver;
-		$user = $driver::retrieve_user($user_data);
+		$user = $this->backdoor($user_data);
 
 		if (method_exists($user, 'set_last_login'))
 		{
 			$user->set_last_login(time());
 		}
+
+		return $user;
+	}
+
+	public function backdoor($user_data)
+	{
+		\Session::set($this->_session_key(), $user_data);
+
+		$driver = $this->_driver;
+		$user = $driver::retrieve_user($user_data);
 
 		$this->_user = $user;
 		return $user;
