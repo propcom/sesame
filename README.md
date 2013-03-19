@@ -131,6 +131,11 @@ provide Sesame with enough information to retrieve your user. Sesame will pass t
 The default controller, driver, and user model in the Sesame module should be well-commented enough to explain the
 procedure and get you running to write your own drivers.
 
+When you call `user_ok` (Sesame will call it for you in the second situation above) the user object is immediately
+fetched from your driver and returned to the caller. Before return the user object is given the current login time
+(simply `time()` at the moment) if the object supports the method `set_last_login`. You are free to not provide this
+method, or to do with the value what you will.
+
 #### Logging out
 
 Simply call `Sesame::instance()->logout()`. This will clear the session and unset the user. You probably will want to
@@ -141,6 +146,17 @@ force a redirect immediately afterward.
 The Sesame instance provides a `signup()` method, to which you can pass any user data required to create a user. This
 will be directly passed to the `make_user` method of your driver, so really this is just a convenient way of deciding
 which driver it goes to by getting Sesame to do it.
+
+#### Backdoor login
+
+In some circumstances you might want to masquerade as a user without actually having their username and password, or
+going through login. An example would be if you had an admin login and wanted to troubleshoot on behalf of another user.
+
+In this case you can call `backdoor_login` instead of `user_ok`, and this will log the user in without running any of
+the post-login stuff.
+
+Currently the only post-login stuff is to provide the current time to the user object as the last login time, but this
+may be extended in future.
 
 ### Extending Sesame
 
