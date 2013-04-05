@@ -52,7 +52,7 @@ class ACL
 			}
 			else
 			{
-				$rules[$segment] = $cur_rule[$segment]['__rules__'];
+				$rules[$segment] = \Arr::get($cur_rule[$segment], '__rules__', []);
 				$cur_rule = $cur_rule[$segment];
 			}
 		}
