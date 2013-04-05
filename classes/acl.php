@@ -44,7 +44,7 @@ class ACL
 		$rules = [ '/' => static::$_rules['__rules__'] ];
 		$cur_rule = static::$_rules;
 
-		foreach ($uri->segments() ?: [] as $segment)
+		foreach ($uri->get_segments() ?: [] as $segment)
 		{
 			if (! isset($cur_rule[$segment]))
 			{
@@ -255,7 +255,7 @@ class ACL
 		{
 			$parent = $segments;
 			array_pop($parent);
-			$parent_path = implode('/', $parent);
+			$parent_path = '/' . implode('/', $parent);
 			array_push($rules, function($user) use ($parent_path) {
 				return \ACL::check_user_access($user, $parent_path);
 			});
