@@ -64,6 +64,6 @@ class Controller_Sesame extends \Controller_Template
 			'fieldset' => $fieldset,
 			'errors' => $errors,
 			'failed' => \Input::method() == 'POST'
-		]);
+		], false);
 	}
 }
