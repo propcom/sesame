@@ -6,7 +6,7 @@ class Driver_Default
 {
 	public static function login()
 	{
-		\Session::set('auth.requested_uri', \Request::string());
+		\Session::set('auth.requested_uri', \Uri::string());
 		\Response::redirect('/login');
 	}
 
