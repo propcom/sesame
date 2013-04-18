@@ -78,9 +78,16 @@ class ACL
 						continue;
 					}
 
-					if ($rule instanceof \Closure and $rule($user))
+					if ($rule instanceof \Closure)
 					{
-						return true;
+						if ($rule($user))
+						{
+							return true;
+						}
+						else
+						{
+							continue;
+						}
 					}
 
 					if (static::_check_user_permission($user, $rule))
@@ -167,15 +174,26 @@ class ACL
 
 					if ($rule === false)
 					{
-						return true;
+						continue;
 					}
 
 					if ($rule instanceof \Closure and $rule($user))
 					{
+						if ($rule($user))
+						{
+							return true;
+						}
+						else
+						{
+							continue;
+						}
 						return false;
 					}
 
-					return static::_check_user_permission($user, $rule);
+					if (static::_check_user_permission($user, $rule))
+					{
+						return false;
+					}
 				}
 
 				return true;
