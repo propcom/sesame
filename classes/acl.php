@@ -75,7 +75,7 @@ class ACL
 
 					if ($rule === false)
 					{
-						return false;
+						continue;
 					}
 
 					if ($rule instanceof \Closure and $rule($user))
@@ -83,7 +83,10 @@ class ACL
 						return true;
 					}
 
-					return static::_check_user_permission($user, $rule);
+					if (static::_check_user_permission($user, $rule))
+					{
+						return true;
+					}
 				}
 
 				return false;
