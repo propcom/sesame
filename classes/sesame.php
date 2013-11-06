@@ -79,6 +79,12 @@ class Sesame
 			return $this->_user;
 		}
 
+		if (\Fuel::$is_cli)
+		{
+			throw new \RuntimeException('No user set in CLI mode! ' .
+				'Use Sesame::user_ok or Sesame::backdoor to set one');
+		}
+
 		if ($user_data = \Session::get($this->_session_key()))
 		{
 			return $this->user_ok($user_data);
