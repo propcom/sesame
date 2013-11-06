@@ -6,6 +6,7 @@ class Sesame
 {
 	protected $_user;
 	protected $_driver;
+	protected static $_instance = [];
 
 	public static function _init()
 	{
@@ -30,12 +31,16 @@ class Sesame
 			$driver = $class_or_config;
 		}
 
+		if ($instance = \Arr::get(static::$_instance, $driver)) {
+			return $instance;
+		}
+
 		if (! class_exists($driver) && ! \Autoloader::load($driver))
 		{
 			throw new \ConfigException('Tried to load login driver ' . $driver . ' but it was not found');
 		}
 
-		return new static($driver);
+		return static::$_instance[$driver] = new static($driver);
 	}
 
 	/**
