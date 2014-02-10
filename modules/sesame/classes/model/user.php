@@ -11,7 +11,7 @@ class Model_User extends \Orm\Model {
 	// The result is passed to Sesame if true.
 	public static function authenticate($username, $password)
 	{
-		$user = static::find()
+		$user = static::query()
 			->where('username', $username)
 			->where('password', static::_hash($password))
 			->get_one();
