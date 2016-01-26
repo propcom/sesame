@@ -87,7 +87,7 @@ class Sesame
 
 		if ($user_data = \Session::get($this->_session_key()))
 		{
-			return $this->user_ok($user_data);
+			return $this->backdoor($user_data);
 		}
 
 		return false;
