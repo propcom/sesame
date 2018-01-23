@@ -12,6 +12,31 @@ class Util
 		\Config::load('sesame', true);
 	}
 
+	private static function pbkdf2( $p, $s, $c, $kl, $a = 'sha256' )
+	{
+		$hl = strlen(hash($a, null, true)); # Hash length
+		$kb = ceil($kl / $hl);              # Key blocks to compute
+		$dk = '';                           # Derived key
+
+		# Create key
+		for ( $block = 1; $block <= $kb; $block ++ )
+		{
+			# Initial hash for this block
+			$ib = $b = hash_hmac($a, $s . pack('N', $block), $p, true);
+
+			# Perform block iterations
+			for ( $i = 1; $i < $c; $i ++ )
+			{
+				# XOR each iterate
+				$ib ^= ($b = hash_hmac($a, $b, $p, true));
+			}
+			$dk .= $ib; # Append iterated block
+		}
+
+		# Return derived key of correct length
+		return substr($dk, 0, $kl);
+	}
+
 	/**
 	 * Use the value of sesame.hash_fn, possibly with sesame.salt, to hash the password.
 	 */
@@ -30,14 +55,14 @@ class Util
 		}
 		elseif ($hash_fn == 'default' || $hash_fn == 'pbkdf2')
 		{
-			$h = new \PHPSecLib\Crypt_Hash();
+			$h = new \PHPSecLib\Crypt\Hash();
 
 			if (! $salt = \Config::get('sesame.password.salt'))
 			{
 				throw new \ConfigException('sesame.password.salt must be defined for the ' . $hash_fn . ' hash function');
 			}
 
-			return $h->pbkdf2($password, $salt, \Config::get('sesame.iterations', 10000), 32);
+			return self::pbkdf2($password, $salt, \Config::get('sesame.iterations', 10000), 32);
 		}
 
 		throw new \ConfigException('Unknown hash type ' . $hash_fn);
