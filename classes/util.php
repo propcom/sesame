@@ -55,7 +55,11 @@ class Util
 		}
 		elseif ($hash_fn == 'default' || $hash_fn == 'pbkdf2')
 		{
-			$h = new \PHPSecLib\Crypt\Hash();
+			if (class_exists('\PHPSecLib\Crypt\Hash')) {
+				$h = new \PHPSecLib\Crypt\Hash();
+			} else {
+				$h = new \phpseclib\Crypt\Hash();
+			}
 
 			if (! $salt = \Config::get('sesame.password.salt'))
 			{
